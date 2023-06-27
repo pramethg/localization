@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms.functional as TF
 from dsntnn.dsntnn import flat_softmax, dsnt
 
 class NyquistConvolution(nn.Module):
@@ -137,27 +136,25 @@ class LocalizationNet(nn.Module):
         x = NyquistConvolution(in_channels = self.in_channels, out_channels = self.in_channels)(x)
         for idx, downsample in enumerate(self.downsample):
             x = downsample(x)
+            # print(x.shape)
             if idx in [1, 2, 3, 4, 6]:
                 self.skipconnections.append(x)
         for idx, upsample in enumerate(self.upsample):
-            if idx in []:
-                x += self.skipconnections[-(idx+1)]
+            if idx in list(range(2, 11, 2)):
+                x = torch.add(x, self.skipconnections[-(idx//2)])
             x = upsample(x)
         self.heatmaps = flat_softmax(x)
         self.coords = dsnt(self.heatmaps)
-        return x
+        return self.coords, self.heatmaps, x
 
 def test():
     x = torch.randn((1, 1, 256, 1024))
     model = LocalizationNet(1, 1)
     pred = model(x)
-    print(pred.shape)
+    assert(pred[2].shape == torch.Size([1, 1, 256, 256]))
+    print("Skip Connections: ")
+    for connection in model.skipconnections:
+        print(connection.shape)
 
 if __name__ == "__main__":
-    x = torch.randn((1, 1, 256, 1024))
-    model = LocalizationNet(1, 1)
-    pred = model(x)
-    print(f"Skip Connections")
-    for conn in model.skipconnections:
-        print(conn.shape)
-    print("Prediction Shape: ", pred.shape)
+    test()

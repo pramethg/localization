@@ -7,17 +7,19 @@ from torch.utils.data import Dataset, DataLoader
 class LocalizationDataset(Dataset):
     def __init__(self, root):
         self.root = root
-        self.items = sorted(os.listdir(self.root))
+        self.items = sorted(os.listdir(os.path.join(self.root, "images")))
+        self.labels = sorted(os.listdir(os.path.join(self.root, "labels")))
 
     def __len__(self):
-        return len(os.listdir(self.root))
+        return len(self.items)
 
     def __repr__(self):
         return f"Localization and Denoising Dataset: {self.__len__()} PA Frames"
     
     def __getitem__(self, index):
         img = np.array(loadmat(os.path.join(self.root, self.items[index]))['PA_Image'])
-        return torch.Tensor(img)
+        label = np.array(loadmat(os.path.join(self.root, self.labels[index]))['PA_Label'])
+        return torch.Tensor(img), torch.Tensor(label)
 
 def test():
     dataset = LocalizationDataset(root = './data/')

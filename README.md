@@ -9,7 +9,7 @@ A simplified, flexible and clear to understand PyTorch implementation of the pap
 
 ## Setup
 ```
-$ git clone https://github.com/pramethg/localization.git
+$ git clone --recursive https://github.com/pramethg/localization.git
 $ cd localization/
 $ python -m venv torchenv
 $ source torchenv/bin/activate
