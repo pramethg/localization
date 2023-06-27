@@ -1,0 +1,3 @@
+[submodule "dsntnn"]
+	path = dsntnn
+	url = https://github.com/anibali/dsntnn
