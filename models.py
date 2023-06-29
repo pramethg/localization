@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import torch.nn as nn
+from torchviz import make_dot
 import torch.nn.functional as F
 from dsntnn.dsntnn import flat_softmax, dsnt
 
@@ -147,14 +148,23 @@ class LocalizationNet(nn.Module):
         self.coords = dsnt(self.heatmaps)
         return self.coords, self.heatmaps, x
 
-def test():
+def test(save = False, make_dot = False):
     x = torch.randn((1, 1, 256, 1024))
     model = LocalizationNet(1, 1)
     pred = model(x)
     assert(pred[2].shape == torch.Size([1, 1, 256, 256]))
-    print("Skip Connections: ")
-    for connection in model.skipconnections:
-        print(connection.shape)
+    print(pred[2].shape)
+    if make_dot:
+        make_dot(pred[2], params=dict(list(model.named_parameters()))).render("model", format="png")
+    if save:
+        torch.onnx.export(
+            model = model,
+            args = x,
+            f = "./local-pa.onnx",
+            input_names = ['Input Sensor Data'],
+            output_names = ['Reconstructed PA Image'],
+            verbose = True
+        )
 
 if __name__ == "__main__":
-    test()
+    test(save = False, make_dot = False)
