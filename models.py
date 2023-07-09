@@ -130,23 +130,19 @@ class LocalizationNet(nn.Module):
         self.upsample.append(ResidualConvModule(in_channels = self.features[1], out_channels = self.features[1], stride = 1))
         self.upsample.append(self.singleconv)
 
-        self.heatmaps = None
-        self.coords = None
-
     def forward(self, x):
         x = NyquistConvolution(in_channels = self.in_channels, out_channels = self.in_channels)(x)
         for idx, downsample in enumerate(self.downsample):
             x = downsample(x)
-            # print(x.shape)
             if idx in [1, 2, 3, 4, 6]:
                 self.skipconnections.append(x)
         for idx, upsample in enumerate(self.upsample):
             if idx in list(range(2, 11, 2)):
                 x = torch.add(x, self.skipconnections[-(idx//2)])
             x = upsample(x)
-        self.heatmaps = flat_softmax(x)
-        self.coords = dsnt(self.heatmaps)
-        return self.coords, self.heatmaps, x
+        heatmaps = flat_softmax(x)
+        coords = dsnt(self.heatmaps)
+        return coords, heatmaps, x
 
 def test(save = False, make_dot = False):
     x = torch.randn((1, 1, 256, 1024))
